@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!-- ↑ 文件類型宣告：告訴瀏覽器這是 HTML5 文件
+     不加這行瀏覽器進入「相容模式（Quirks Mode）」，排版可能異常 -->
+
+<html lang="zh-Hant">
+<!-- ↑ HTML 根元素，包含整個頁面
+     lang="zh-Hant"：語言標籤，告訴瀏覽器和螢幕閱讀器這是繁體中文 -->
+
+  <head>
+  <!-- ↑ 頁面的「設定區」，裡面的內容不會顯示在畫面上 -->
+
+    <meta charset="UTF-8" />
+    <!-- ↑ 字符編碼 UTF-8：支援中文、emoji、特殊符號
+         必須放在 <head> 最前面，否則中文可能亂碼 -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- ↑ 手機版 RWD 必要設定：
+         width=device-width  讓頁面寬度等於裝置螢幕寬度（不縮放）
+         initial-scale=1.0   初始縮放比例 1:1 -->
+
+    <title>HabitFlow</title>
+    <!-- ↑ 瀏覽器分頁上顯示的標題文字 -->
+
+  </head>
+
+  <body>
+  <!-- ↑ 頁面的「內容區」，所有可見內容在這裡 -->
+
+    <div id="root"></div>
+    <!-- ↑ React 的「掛載點」：空的 div，id="root"
+         src/main.jsx 用 document.getElementById('root') 找到它
+         React 把整個 App 元件渲染到這個 div 裡
+         一開始是空的，React 啟動後才填入內容 -->
+
+    <script type="module" src="/src/main.jsx"></script>
+    <!-- ↑ 載入 React 應用程式的入口點
+         type="module"：使用 ES Module 語法，讓 import/export 可以運作
+         src="/src/main.jsx"：Vite 開發伺服器接到這個請求，動態編譯 JSX 並回傳
+         build 後 Vite 會自動把這行換成指向 /assets/index-xxxxx.js -->
+
+  </body>
+</html>

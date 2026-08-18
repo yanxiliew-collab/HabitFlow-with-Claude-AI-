@@ -1,0 +1,58 @@
+# docker-compose.yml ─ 所有容器的統一管理設定
+# 指令：docker compose up --build（建置+啟動）
+# 指令：docker compose down（停止移除）
+
+services:  # 宣告要管理的服務清單（每個服務 = 一個容器）
+
+  # ── 後端容器 ────────────────────────────────────────────────────
+  backend:                          # 服務名稱（可自訂，用於 logs/exec 指令）
+    build: ./backend                # 用 ./backend/Dockerfile 建置這個容器的 Image
+    ports:
+      - "8000:8000"                 # 端口映射：主機的 8000 → 容器內的 8000
+    environment:                    # 傳入容器的環境變數（Python 用 os.getenv() 讀取）
+      - DATABASE_URL=postgresql://habituser:habitpw@db:5432/habitdb
+      #              ─── PostgreSQL 連線字串格式 ───
+      #              postgresql://帳號:密碼@主機:端口/資料庫名
+      #              "db" 是 docker-compose 的服務名，Docker DNS 自動解析成 IP
+    depends_on:
+      db:
+        condition: service_healthy  # 等 db 的 healthcheck 通過後才啟動 backend
+                                    # 防止 backend 比 PostgreSQL 早起，連線失敗
+    restart: on-failure             # 容器異常退出（非 0 exit code）時自動重啟
+
+  # ── 前端容器 ────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend           # Dockerfile 所在的資料夾
+      args:                         # 傳給 Dockerfile 的建置參數（build-time，非 runtime）
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+        # ↑ 從 .env 讀取，沒設定就用預設值
+        # ${VAR:-default}：有值用值，無值用預設（docker-compose 語法）
+        # 這個值在 npm run build 時被 Vite 讀取並寫死進 JS bundle
+    ports:
+      - "5173:80"                   # 外部 5173 → 容器內 Nginx 監聽的 80
+
+  # ── 資料庫容器 ──────────────────────────────────────────────────
+  db:
+    image: postgres:15              # 直接用 Docker Hub 官方 PostgreSQL 15 映像
+    environment:
+      - POSTGRES_USER=habituser     # 建立的資料庫用戶名
+      - POSTGRES_PASSWORD=habitpw   # 用戶密碼
+      - POSTGRES_DB=habitdb         # 容器啟動時自動建立的資料庫名稱
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # 資料存在 named volume，容器重建後不遺失
+    healthcheck:                    # 定期確認 PostgreSQL 是否就緒
+      test: ["CMD-SHELL", "pg_isready -U habituser -d habitdb"]
+      # pg_isready：PostgreSQL 內建工具，DB 準備好時回傳 exit code 0
+      interval: 5s                  # 每 5 秒執行一次
+      timeout: 5s                   # 等待上限 5 秒，超過算失敗
+      retries: 5                    # 連續 5 次失敗才標記為 unhealthy
+
+  # ── 資料庫管理介面（選用）──────────────────────────────────────
+  adminer:
+    image: adminer                  # 官方 Adminer 映像，瀏覽器管理資料庫的工具
+    ports:
+      - "8080:8080"                 # 打開 localhost:8080 即可管理 PostgreSQL
+
+volumes:
+  pgdata:                           # 宣告 named volume（不宣告此行，上面的設定會報錯）

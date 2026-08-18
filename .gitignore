@@ -1,0 +1,10 @@
+# .gitignore ─ 告訴 git 哪些檔案不要追蹤或上傳
+
+.env                # 環境變數（有機密，絕對不能上傳 GitHub）
+__pycache__/        # Python 自動產生的 bytecode 暫存資料夾
+*.pyc               # Python 編譯後的 bytecode（.pyc = Python Compiled）
+*.pyo               # 舊版 Python 的最佳化 bytecode
+node_modules/       # npm install 的安裝目錄（體積超大，從 package.json 重裝即可）
+dist/               # npm run build 的輸出目錄（由 CI/CD 重新建置即可）
+.DS_Store           # macOS 系統產生的資料夾設定檔
+*.log               # 程式執行時產生的 log 檔

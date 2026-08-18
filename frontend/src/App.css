@@ -1,0 +1,643 @@
+/* App.css ─ HabitFlow 的所有樣式
+   引入方式：main.jsx 的 import './App.css'
+   Vite 自動把這個 CSS 注入到 HTML 的 <head> */
+
+/* ── Reset：清除瀏覽器預設樣式 ── */
+*, *::before, *::after {
+/* ↑ * 萬用選擇器：選取所有元素
+   *::before, *::after：也包含偽元素 */
+  box-sizing: border-box;
+  /* ↑ width 和 height 包含 padding 和 border（預設 content-box 不含 padding，計算容易出錯）*/
+  margin: 0;    /* 清除所有元素的預設外邊距（各瀏覽器預設值不一樣）*/
+  padding: 0;   /* 清除所有元素的預設內邊距 */
+}
+
+body {
+/* ↑ 整個頁面（<body>）的全域樣式 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* ↑ 字型堆疊（Font Stack）：依序嘗試，找到就用：
+     -apple-system        macOS/iOS 系統字型（San Francisco）
+     BlinkMacSystemFont   Chrome on macOS 的系統字型
+     'Segoe UI'           Windows 系統字型
+     sans-serif           以上都沒有時，用任何無襯線字型 */
+  background: #0f172a;  /* 深藍黑背景（接近 Tailwind slate-900）*/
+  color: #e2e8f0;       /* 淺灰白文字（Tailwind slate-200），確保在深色背景上可讀 */
+  min-height: 100vh;    /* 最小高度 = 視窗高度（vh = viewport height），避免短頁面留白 */
+}
+
+/* ── 整體佈局 ── */
+.app {
+  max-width: 1000px;    /* 最大寬度 1000px*/
+  margin: 0 auto;      /* 上下 0、左右 auto = 水平置中 */
+  padding: 40px 16px 80px;
+  /* ↑ 上 40px | 左右 16px（手機兩側留邊）| 下 80px（底部額外空間）*/
+}
+
+/* ── 標題區 ── */
+header             { text-align: center; margin-bottom: 36px; }
+header h1          { font-size: 2rem; font-weight: 700; color: #fff; }
+/* ↑ 2rem = 32px（相對根元素字體大小），700 = 加粗（bold）*/
+header p           { color: #64748b; margin-top: 6px; font-size: 0.95rem; }
+
+/* ── 習慣列表容器 ── */
+.list {
+  display: flex;           /* Flexbox 排版 */
+  flex-direction: column;  /* 垂直排列子元素（預設是水平）*/
+  gap: 10px;               /* 子元素之間的間距 */
+}
+
+/* ── 習慣卡片 ── */
+.card {
+  display: flex;             /* Flexbox：讓卡片內的元素水平排列 */
+  flex-wrap: wrap;
+  align-items: center;       /* 垂直方向置中對齊 */
+  justify-content: center;
+  gap: 12px;                 /* 子元素間距 12px */
+  background: #1e293b;       /* 深藍灰背景（slate-800）*/
+  border: 1px solid #334155; /* 邊框（slate-700）*/
+  border-radius: 14px;       /* 圓角 14px */
+  padding: 14px 16px;        /* 內邊距：上下 14px、左右 16px */
+  transition: border-color 0.2s, background 0.2s;
+  /* ↑ CSS 過渡效果：border-color 和 background 改變時花 0.2 秒漸變（讓打卡動畫更流暢）*/
+}
+
+.habit-card {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.habitComment, .comments-info {
+  flex-basis: 100%;
+  min-width: 0;
+}
+
+.comment-info, .new-comment-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  flex-basis: 100%;
+  min-width: 0;
+  margin-bottom: 12px; 
+}
+
+.comment-info textarea {
+  box-sizing: border-box;
+
+  flex: 1;
+  flex-basis: 100%;
+
+  background: rgba(0, 0, 0, 0);
+  resize: vertical;
+
+  min-height: 40px;
+  height: 40px;
+
+  border: 1px solid rgba(0, 0, 0, 0);
+  border-radius: 8px;
+
+  margin-right: 15px;
+  padding: 9px 11px;
+
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+
+  min-width: 0;
+  outline: none;
+}
+.comment-info textarea:focus { border-color: rgba(255, 250, 201, 0.5); }   /* focus 時藍色邊框 */
+
+.comment-date-done { font-size: 0.8rem; color: #f97316; font-weight: 600; white-space: nowrap; width: 6em; flex-shrink: 0; text-align: left; }
+
+.comment-date { font-size: 0.8rem; color: #e2e8f0; font-weight: 600; white-space: nowrap; width: 6em; flex-shrink: 0; text-align: left; }
+
+.toggle-comment-btn, .toggle-calender-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.3rem;
+  opacity: 0.3;         /* 預設半透明（低調）*/
+  transition: opacity 0.2s;
+  padding: 2px;
+}
+
+.comment-check-btn {
+  height: 30px;
+  aspect-ratio: 1 / 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #001a51;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 1000;
+
+  opacity: 1;
+  transition: background 0.15s;
+
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.comment-del-btn, .comment-undo-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.5rem;
+  opacity: 0.3;         /* 預設半透明（低調）*/
+  transition: opacity 0.2s;
+  padding: 2px;
+}
+
+.comment-del-btn:hover, .comment-undo-btn:hover {
+  opacity: 1;
+}
+
+.comment-check-btn:disabled {
+  background: none; 
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.comment-date-input {
+  background: none;
+  border: none;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  width: 6em;
+  height: 30px;
+  max-width: 6em;
+  flex-shrink: 0;
+  text-align: left;
+}
+
+.comment-check-btn:enabled:hover { background: #002488; }   /* hover 時完全顯示 */
+
+.toggle-comment-btn:hover, .toggle-calender-btn:hover {
+  opacity: 1; }   /* hover 時完全顯示 */
+
+.edit {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+.typing.edit {
+  background: none; 
+  opacity: 0.4;
+}
+
+.card.done {
+/* ↑ .done 是當習慣已打卡時 App.jsx 加上的 class，覆蓋 .card 的顏色 */
+  background: #0a1f12;     /* 深綠背景（已打卡的視覺回饋）*/
+  border-color: #065f46;   /* 深綠邊框（emerald-800）*/
+}
+
+/* ── 打卡按鈕 ── */
+.checkin-btn {
+  font-size: 1.5rem;   /* 放大 emoji */
+  background: none;    /* 移除按鈕預設背景 */
+  border: none;        /* 移除按鈕預設邊框 */
+  cursor: pointer;     /* 滑鼠移上去顯示手型游標 */
+  line-height: 1;      /* 行高 1，讓 emoji 垂直置中 */
+  flex-shrink: 0;      /* 禁止在空間不足時縮小 */
+  transition: transform 0.1s;   /* 點擊放大效果的過渡 */
+}
+.checkin-btn:hover:not(:disabled) { transform: scale(1.2); }
+/* ↑ hover 且未 disabled 時放大 1.2 倍
+   :not(:disabled) 排除 disabled 狀態（disabled 時不做放大）*/
+.checkin-btn:disabled { opacity: 0.5; cursor: wait; }
+/* ↑ disabled（忙碌中）：半透明 + 等待游標 */
+
+/* ── 習慣資訊區 ── */
+.habit-info {
+  flex: 1;           /* 佔滿剩餘空間，把按鈕推到兩端 */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;      /* Flex 子元素預設不縮小超過 min-content，設 0 讓文字可以截斷 */
+}
+.habit-icon { font-size: 1.3rem; flex-shrink: 0; }  /* emoji 放大，禁止縮小 */
+.habit-name {
+  font-size: 1.2rem;
+  font-weight: 500;
+  background: none; border: none; cursor: pointer;
+  color: #e2e8f0;
+  white-space: nowrap;      /* 禁止換行 */
+  overflow: hidden;         /* 超出容器隱藏 */
+  text-overflow: ellipsis;  /* 超出部分顯示 ... */
+  padding: 9px 11px;
+  border-radius: 8px;
+  min-height: 40px;
+  height: 40px;
+  /* ↑ 這三個屬性組合實現「單行文字截斷」效果 */
+}
+.done .habit-name:not(:focus) {
+/* ↑ 已打卡的習慣名稱：加刪除線 + 變灰 */
+  text-decoration: line-through;
+  color: #475569;    /* 更暗的灰（slate-600）*/
+}
+
+.habit-name:focus {
+  outline: 0px;
+}
+
+.habit-name:hover {
+  outline: 1px solid #ffffee87;   
+}
+
+/* ── 連續天數和刪除按鈕 ── */
+.habit-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.streak { font-size: 0.8rem; color: #f97316; font-weight: 600; white-space: nowrap; }
+/* ↑ 橘色文字（orange-500），加粗，不換行 */
+.del-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.3rem;
+  opacity: 0.3;         /* 預設半透明（低調）*/
+  transition: opacity 0.2s;
+  padding: 2px;
+}
+.del-btn:hover { opacity: 1; }   /* hover 時完全顯示 */
+
+/* ── 新增習慣按鈕 ── */
+.add-btn {
+  width: 100%;                   /* 撐滿整行 */
+  padding: 14px;
+  background: none;
+  border: 2px dashed #334155;   /* 虛線邊框（表示可新增）*/
+  border-radius: 14px;
+  color: #64748b;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.add-btn:hover { border-color: #3b82f6; color: #60a5fa; }
+/* ↑ hover 時變藍色（blue-500/400）*/
+
+/* ── 新增習慣表單 ── */
+.form-card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 16px; }
+
+.emoji-grid {
+  display: flex;
+  flex-wrap: wrap;   /* 允許換行，超過寬度自動到下一行 */
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.emoji-btn {
+  font-size: 1.3rem; width: 42px; height: 42px;
+  background: #0f172a; border: 1px solid #334155;
+  border-radius: 8px; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.emoji-btn.selected { border-color: #3b82f6; background: #1e3a5f; }
+/* ↑ 選取的 emoji：藍色邊框 + 藍色背景 */
+
+.form-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.form-icon { font-size: 1.3rem; flex-shrink: 0; }
+
+.form-row input {
+  flex: 1;                          /* 佔滿剩餘空間 */
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #e2e8f0;                   /* 深色背景需要明確設白色文字 */
+  font-size: 0.95rem;
+  outline: none;                    /* 移除預設 focus 藍框（我們自己定義）*/
+}
+.form-row input:focus { border-color: #3b82f6; }   /* focus 時藍色邊框 */
+
+.form-actions, .action-new-comment { display: flex; gap: 8px; justify-content: flex-end; }   /* 按鈕靠右 */
+
+.btn-cancel {
+  padding: 8px 16px; background: none;
+  border: 1px solid #334155; border-radius: 8px;
+  color: #94a3b8; cursor: pointer; font-size: 0.9rem;
+}
+
+.btn-save, .new-comment-btn {
+  padding: 8px 22px;
+  background: #2563eb;   /* 藍色背景（blue-600）*/
+  border: none; border-radius: 8px;
+  color: #fff; font-size: 0.9rem; font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-self: flex-end;   /* 讓按鈕靠右（flex-end）*/
+}
+.btn-save:hover:not(:disabled) { background: #1d4ed8; }   /* hover 深藍 */
+.btn-save:disabled { opacity: 0.4; cursor: not-allowed; }  /* disabled 半透明 */
+
+/* ── 狀態頁面 ── */
+.center {
+  display: flex; align-items: center; justify-content: center;
+  /* ↑ Flexbox 水平 + 垂直置中 */
+  min-height: 100vh;   /* 佔滿整個視窗高度 */
+  color: #64748b;
+}
+.empty  { text-align: center; color: #64748b; padding: 24px; font-size: 0.9rem; }
+
+.error-box {
+/* ↑ API 連線失敗時的錯誤提示框 */
+  background: #4c0519;             /* 深紅背景 */
+  border: 1px solid #9f1239;       /* 深紅邊框 */
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #fda4af;                  /* 粉紅文字（在深紅背景上可讀）*/
+  font-size: 0.875rem;             /* 14px（略小）*/
+  margin-bottom: 16px;
+  line-height: 1.5;                /* 行高 1.5，多行文字不會太擠 */
+}
+
+.calendar{
+  align-items: center; justify-content: center;
+  background: #151f2d; border: 1px solid #ffffffa1; border-radius: 10px;
+  max-width: 500px;
+  flex: 100%;
+  padding: 12px 16px;
+  margin-top: 1cqw;
+  margin-bottom: 8cqw;
+  container-type: inline-size;
+}
+
+.weekdayNames{
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  width: 100%
+}
+
+.weekdayName{
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+  font-size: clamp(0px, 7cqw, 28px);
+}
+
+.week{
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  width: 100%
+}
+
+
+.weekday-btn{
+  aspect-ratio: 1 / 1;
+  background: none; border: none; border-radius: 5px;
+  font-size: clamp(0px, 7cqw, 28px);
+  color: #e2e8f0; 
+  position: relative;
+}
+
+.checkinfire{
+  font-size: clamp(0px, 10cqw, 56px);
+  position: relative;
+  top: -5px;
+}
+
+.weekday-btn sup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(0px, 7cqw, 28px);
+  font-weight: bold;
+  color: #2d1300
+}
+
+
+.calendar-first-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  color: #e2e8f0;
+  font-size: clamp(0px, 7cqw, 28px);
+}
+
+.calendar-first-row input {
+  background: none;
+  border: none;
+  border-radius: 5px;
+  color: #e2e8f0;
+  font-size: clamp(0px, 7cqw, 28px);
+  margin-top: 15px;
+  margin-bottom: 15px;
+
+  text-align: center;
+}
+
+.prev-month,
+.next-month {
+  position: absolute;
+
+  aspect-ratio: 1 / 1;
+  background: none;
+  border: none;
+  border-radius: 5px;
+
+  font-size: clamp(0px, 7cqw, 56px);
+  color: #e2e8f0;
+  font-weight: 750;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  display: grid;
+  place-items: center;
+}
+
+.prev-month {
+  left: 5cqw;
+}
+
+.next-month {
+  right: 5cqw;
+}
+
+.year-month {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-year {
+  width: 5ch;
+}
+
+.input-month {
+  width: 3ch;
+}
+
+.non-target-month .weekday-content{
+  opacity: 0.3;
+}
+
+.comment-tooltip {
+  position: absolute;
+  z-index: 9996;
+
+  top: 0.45em;
+  right: 1.2em;
+  transform: translateX(100%);
+
+  padding: 0.3em 0.5em;
+  border-radius: 0.3em;
+
+  background: #222;
+  color: white;
+
+  font-size: clamp(12px, 5cqw, 28px);
+  white-space: pre;
+  text-align: left;
+  pointer-events: none;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transition: opacity 0.15s ease;
+}
+
+
+
+.weekday-btn:hover .comment-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.has-comment::after {
+  content: "📌";
+  position: absolute;
+  z-index: 9997;
+
+  top: 0.3em;
+  right: 0.3em;
+
+  font-size: clamp(10px, 4cqw, 20px);
+  opacity: 1;
+  line-height: 1;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.5);
+
+}
+
+.modal {
+  width: min(90vw, 500px);
+  z-index: 9999;
+
+  padding: 24px;
+  border-radius: 12px;
+
+  background: #222;
+  color: white;
+
+  box-sizing: border-box;
+}
+
+.date-picker {
+  position: relative;
+}
+
+.calendar-popup {
+  position: absolute;
+  
+  width: min(320px, calc(100vw - 150px));
+  max-width: calc(100vw - 150px);
+  aspect-ratio: 1 / 1;
+
+  top: 100%;
+  z-index: 9999;
+}
+
+.calendar-popup.right {
+  left: 0;
+}
+
+.calendar-popup.left {
+  right: 0;
+  left: auto;
+}
+
+
+.modal textarea {
+  width: 100%;
+  min-height: 180px;
+  box-sizing: border-box;
+
+  padding: 12px;
+  resize: vertical;
+
+  border: 1px solid #ffffff50;
+  border-radius: 8px;
+
+  background: #ffffff0a;
+  color: #e2e8f0;
+
+  font-size: 16px;
+  font-family: inherit;
+  line-height: 1.5;
+
+  outline: none;
+}
+
+.modal textarea:focus {
+  border-color: #ffffffa0;
+  background: #ffffff12;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-btn {
+  min-width: 80px;
+  padding: 8px 16px;
+
+  border: none;
+  border-radius: 8px;
+
+  font-size: 15px;
+  font-family: inherit;
+
+  cursor: pointer;
+}
+
+.modal-confirm-btn {
+  background: #4ade80;
+  color: #111;
+}
+
+.modal-confirm-btn:hover {
+  background: #22c55e;
+}
+
+.modal-close-btn {
+  background: #ffffff18;
+  color: #e2e8f0;
+}
+
+.modal-close-btn:hover {
+  background: #ffffff28;
+}
+
+.modal-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
