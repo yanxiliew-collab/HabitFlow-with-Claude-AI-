@@ -1,7 +1,7 @@
 # .gitignore ─ 告訴 git 哪些檔案不要追蹤或上傳
 
 .env
-# 環境變數（有機密，絕對不能上傳 GitHub）
+# 環境變數
 __pycache__/
 # Python 自動產生的 bytecode 暫存資料夾
 *.pyc
@@ -16,3 +16,5 @@ dist/
 # macOS 系統產生的資料夾設定檔
 *.log
 # 程式執行時產生的 log 檔
+.text.md
+# 私人筆記本
