@@ -1,0 +1,24 @@
+# requirements.txt ─ Python 套件清單
+# Docker build 時：RUN pip install -r requirements.txt
+# 本機開發時：pip install -r requirements.txt
+
+fastapi
+# ↑ 本專案的核心後端框架
+# 提供：@app.get/@app.post 路由裝飾器、自動 /docs 文件、Depends 依賴注入
+# 安裝時自動附帶：pydantic（資料驗證）、starlette（HTTP 底層）
+
+uvicorn[standard]
+# ↑ ASGI 伺服器，負責監聽 HTTP 連線並交給 FastAPI 處理
+# [standard] 額外安裝：uvloop（更快的事件循環）、websockets 支援
+# CMD 裡的 uvicorn main:app 就是執行這個套件
+
+sqlalchemy
+# ↑ ORM 框架（Object Relational Mapper）
+# 讓你用 Python class 定義資料表、用 Python 語法查資料庫
+# db.query(Habit).all() → 自動翻譯成 SELECT * FROM habits;
+# 包含：sqlalchemy.orm（Session、relationship）、sqlalchemy（Column、ForeignKey 等）
+
+psycopg2-binary
+# ↑ PostgreSQL 的 Python 驅動程式
+# SQLAlchemy 需要它來真正和 PostgreSQL 通訊（你的程式碼不直接 import 它）
+# -binary：預先編譯版，不需要系統安裝 libpq-dev
