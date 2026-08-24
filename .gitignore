@@ -16,5 +16,5 @@ dist/
 # macOS 系統產生的資料夾設定檔
 *.log
 # 程式執行時產生的 log 檔
-.text.md
+text.md
 # 私人筆記本
