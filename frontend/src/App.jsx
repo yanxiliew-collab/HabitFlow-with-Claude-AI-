@@ -8,6 +8,8 @@ import { useState, useEffect, useRef } from 'react'
 // useRef     獲取 DOM 元素的參考
 // 來自：react 套件（package.json 的 dependencies）
 
+import * as dateFunction from './function/dateFunction.jsx'
+
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 // ↑ 讀取後端 API 的基礎網址
 // import.meta.env：Vite 提供的環境變數物件（Vite 特有，不是瀏覽器原生）
@@ -23,53 +25,6 @@ const EMOJIS = ['⭐','📖','💪','💻','🎵','🧘','🍎','✏️','🏃',
 export default function App() {
 // ↑ export default：把 App 函式匯出為預設匯出（main.jsx 的 import App from './App' 引入）
 // function App()：React 函式元件（名稱首字母大寫是 React 的規定，區分 HTML 標籤和元件）
-
-  const now = new Date()
-  const today =`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  const [selectedDate, setSelectedDate] = useState(new Map());
-  const [inputYear, setInputYear] = useState(new Map())
-  const [inputMonth, setInputMonth] = useState(new Map())
-
-  const strDate = (convertedDate) => {
-    const year = convertedDate.getFullYear();
-    const month = String(convertedDate.getMonth() + 1).padStart(2, '0');
-    const day = String(convertedDate.getDate()).padStart(2, '0');
-
-    return {
-      year,
-      month,
-      day,
-      str: `${year}-${month}-${day}`,
-    };
-  };
-
-  const isValidDateString = (value) => {
-    if (typeof value !== 'string') {
-      return false;
-    }
-
-    const match = value.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
-
-    if (!match) {
-      return false;
-    }
-
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    const day = Number(match[3]);
-
-    const date = new Date(year, month - 1, day);
-
-    if (
-      date.getFullYear() !== year ||
-      date.getMonth() !== month - 1 ||
-      date.getDate() !== day
-    ) {
-      return false;
-    }
-
-    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  };
 
   const [habits, setHabits]     = useState([])
   // ↑ useState([])：宣告一個狀態變數，初始值是空陣列
@@ -126,6 +81,13 @@ export default function App() {
   // ↑ 是否正在等待 API 回應，防止重複送出請求
 
   const [calendarPosition, setCalendarPosition] = useState('right');
+
+  const [selectedDate, setSelectedDate] = useState(new Map());
+  const [inputYear, setInputYear] = useState(new Map())
+  const [inputMonth, setInputMonth] = useState(new Map())
+  
+  const now = new Date()
+  const today =`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
   const openCalendar = (habit) => {
     const input = document.querySelector(
@@ -310,7 +272,7 @@ export default function App() {
   }
 
   const postComment = async (habit, commentDate, comment) => {
-    commentDate = isValidDateString(commentDate)
+    commentDate = dateFunction.isValidDateString(commentDate)
     if (!comment?.trim()) {
       await deleteComment(habit, habit.comments.find(findComment => findComment.date === commentDate) || comment)
       return
@@ -408,7 +370,7 @@ export default function App() {
       </button>
       <div className ="year-month">
       <input className = "input-year"
-        value={inputYear.get(habit.id) ?? strDate(dateForYearMonth).year}
+        value={inputYear.get(habit.id) ?? dateFunction.strDate(dateForYearMonth).year}
         onClick={e => e.stopPropagation()}
         onChange={e => setInputYear(prev => {
           const next = new Map(prev)
@@ -466,7 +428,7 @@ export default function App() {
           }
         }}
       /><span>年</span><input className = "input-month"
-        value={inputMonth.get(habit.id) ?? strDate(dateForYearMonth).month}
+        value={inputMonth.get(habit.id) ?? dateFunction.strDate(dateForYearMonth).month}
         onClick={e => e.stopPropagation()}
         onChange={e => setInputMonth(prev => {
           const next = new Map(prev)
@@ -558,20 +520,20 @@ export default function App() {
                   ? ' non-target-month'
                   : ''
               }${
-                habit.checkins.some(e => e.date === strDate(dateInWeek).str)
+                habit.checkins.some(e => e.date === dateFunction.strDate(dateInWeek).str)
                   ? ' checkin-day'
                   : ''
               }${
-                habit.comments.some(e => e.date === strDate(dateInWeek).str)
+                habit.comments.some(e => e.date === dateFunction.strDate(dateInWeek).str)
                   ? ' has-comment'
                   : ''
-              }`} key={strDate(dateInWeek).str}
+              }`} key={dateFunction.strDate(dateInWeek).str}
               onClick={e => {
                 e.stopPropagation();
 
                 if(newCommentBool === true) {
                   const clickedDate = new Date(dateInWeek);
-                  const clickedDateString = strDate(clickedDate).str;
+                  const clickedDateString = dateFunction.strDate(clickedDate).str;
                   
                   setSelectedDate(prev => {
                     const next = new Map(prev);
@@ -585,14 +547,14 @@ export default function App() {
                   });
                 } else {
                   const buttonComment = habit.comments.find(
-                    comment => comment.date === strDate(dateInWeek).str
+                    comment => comment.date === dateFunction.strDate(dateInWeek).str
                   );
 
                   setModalInfo({
                     habit,
                     comment: buttonComment ?? {
                       id: null,
-                      date: strDate(dateInWeek).str,
+                      date: dateFunction.strDate(dateInWeek).str,
                       text: ''
                     }
                   });
@@ -602,14 +564,14 @@ export default function App() {
               }}}
             >
             {
-              habit.checkins.some(e => e.date === strDate(dateInWeek).str)
-                ? <span className="weekday-content"><><span className = 'checkinfire'>🔥</span><sup>{strDate(dateInWeek).day}</sup></></span>
-                : <span className="weekday-content">{strDate(dateInWeek).day}</span>
+              habit.checkins.some(e => e.date === dateFunction.strDate(dateInWeek).str)
+                ? <span className="weekday-content"><><span className = 'checkinfire'>🔥</span><sup>{dateFunction.strDate(dateInWeek).day}</sup></></span>
+                : <span className="weekday-content">{dateFunction.strDate(dateInWeek).day}</span>
             }
-            {habit.comments.some(e => e.date === strDate(dateInWeek).str) && (
+            {habit.comments.some(e => e.date === dateFunction.strDate(dateInWeek).str) && (
               <span className="comment-tooltip">
                 {habit.comments.find(
-                  e => e.date === strDate(dateInWeek).str
+                  e => e.date === dateFunction.strDate(dateInWeek).str
                 )?.text}
               </span>)}
             
@@ -985,7 +947,7 @@ export default function App() {
                       onKeyDown={e => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault()
-                          if(isValidDateString(newCommentDate)) {
+                          if(dateFunction.isValidDateString(newCommentDate)) {
                             postComment(habit, newCommentDate.get(habit.id), inputValue)
                           } else {
                           const textarea = newtextareaRefs.current.get(`${habit.id}-date`)
@@ -1069,8 +1031,8 @@ export default function App() {
                       </div>
                     )}
                     </div>
-                    <button className={`comment-check-btn${!inputNewComment.get(habit.id) || !isValidDateString(newCommentDate.get(habit.id)) ? " edit" : ""}${focus.get(`${habit.id}-newComment`) || focus.get(`${habit.id}-newDate`) ? " typing" : ""}`}
-                      disabled={( habit.comments.some(comment => comment.date === isValidDateString(newCommentDate.get(habit.id))) &&!!inputNewComment.get(habit.id) &&!!isValidDateString(newCommentDate.get(habit.id))) ||busy}
+                    <button className={`comment-check-btn${!inputNewComment.get(habit.id) || !dateFunction.isValidDateString(newCommentDate.get(habit.id)) ? " edit" : ""}${focus.get(`${habit.id}-newComment`) || focus.get(`${habit.id}-newDate`) ? " typing" : ""}`}
+                      disabled={( habit.comments.some(comment => comment.date === dateFunction.isValidDateString(newCommentDate.get(habit.id))) &&!!inputNewComment.get(habit.id) &&!!dateFunction.isValidDateString(newCommentDate.get(habit.id))) ||busy}
                       onClick={async e => {
                         e.stopPropagation()
 
@@ -1083,7 +1045,7 @@ export default function App() {
                               textarea.value.length
                             )
                           }
-                        } else if (!isValidDateString(newCommentDate.get(habit.id))) {
+                        } else if (!dateFunction.isValidDateString(newCommentDate.get(habit.id))) {
                           const textarea = newtextareaRefs.current.get(`${habit.id}-date`)
                           if (textarea) {
                             textarea.focus()
@@ -1123,7 +1085,7 @@ export default function App() {
                           }
                         }
                       }}
-                    >{!inputNewComment.get(habit.id) || !isValidDateString(newCommentDate.get(habit.id)) ? "✎" : "✓"}</button> 
+                    >{!inputNewComment.get(habit.id) || !dateFunction.isValidDateString(newCommentDate.get(habit.id)) ? "✎" : "✓"}</button> 
                     <button className={`comment-del-btn`}
                       disabled={busy}
                       onClick={e => {
