@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'react'
 // 來自：react 套件（package.json 的 dependencies）
 
 import * as dateFunction from './function/dateFunction.jsx'
+import * as calendarFunction from './function/calendarFunction.jsx'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 // ↑ 讀取後端 API 的基礎網址
@@ -19,6 +20,8 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const EMOJIS = ['⭐','📖','💪','💻','🎵','🧘','🍎','✏️','🏃','💧','🎯','🌟','🎨','📝','🔥']
 // ↑ 新增習慣時可選的 emoji 清單（普通 JavaScript 常數陣列）
 // const：宣告常數（不可重新賦值這個參考，但陣列內容可以改）
+
+
 
 
 
@@ -89,33 +92,23 @@ export default function App() {
   const now = new Date()
   const today =`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
-  const openCalendar = (habit) => {
-    const input = document.querySelector(
-      `[data-date-input="${habit.id}"]`
-    );
 
-    if (!input) return;
+  const calendarContext = {
+    selectedDate,
+    setSelectedDate,
+    inputYear,
+    setInputYear,
+    inputMonth,
+    setInputMonth,
+    setNewCommentDate,
+    setModalInfo,
+    setInputModal,
+    setShowModal,
+  };
 
-    const rect = input.getBoundingClientRect();
-
-    const calendarWidth = 320;
-    const margin = 10;
-
-    const spaceRight =
-      window.innerWidth - rect.left;
-
-    const spaceLeft =
-      rect.right;
-
-    if (spaceRight >= calendarWidth + margin) {
-      setCalendarPosition('right');
-    } else if (spaceLeft >= calendarWidth + margin) {
-      setCalendarPosition('left');
-    } else {
-      setCalendarPosition('right');
-    }
-
-    setShowCalendar(habit.id);
+  const openCalendarContext = {
+    setCalendarPosition,
+    setShowCalendar
   };
 
   const fetchHabits = async () => {
@@ -352,250 +345,6 @@ export default function App() {
       setBusy(false)
     }
   }
-
-  const calendarFirstRow = (habit, dateForYearMonth) =>(
-    <div className = "calendar-first-row">
-      <button className = "prev-month" 
-      text = '<'
-      onClick={e => {
-        e.stopPropagation()
-        setSelectedDate(prevDateMap => {
-        const nextDateMap = new Map(prevDateMap);
-        const prevDate = prevDateMap.get(habit.id) || now
-        const newDate = new Date(prevDate.getFullYear(),prevDate.getMonth() - 1,1)
-        nextDateMap.set(habit.id, newDate)
-        return nextDateMap
-      })}}
-      > &lt;
-      </button>
-      <div className ="year-month">
-      <input className = "input-year"
-        value={inputYear.get(habit.id) ?? dateFunction.strDate(dateForYearMonth).year}
-        onClick={e => e.stopPropagation()}
-        onChange={e => setInputYear(prev => {
-          const next = new Map(prev)
-          next.set(habit.id, e.target.value)
-          return next
-        })}
-        onBlur={e => {
-          setSelectedDate(prevDateMap => {
-            const value = inputYear.get(habit.id);
-
-            // 輸入不是 4 位數 → 保持原本 state
-            if (!/^\d{4}$/.test(value)) {
-              setInputYear(prev => {
-                const next = new Map(prev);
-                next.delete(habit.id);
-                return next;
-            });
-              return prevDateMap;
-            }
-
-            const year = Number(value);
-
-            // 年份超出範圍 → 保持原本 state
-            if (year < 1 || year > 9999) {
-              setInputYear(prev => {
-                const next = new Map(prev);
-                next.delete(habit.id);
-                return next;
-            });
-              return prevDateMap;
-            }
-
-            const nextDateMap = new Map(prevDateMap);
-
-            const prevDate =
-              prevDateMap.get(habit.id) || now;
-
-            const newDate = new Date(
-              year,
-              prevDate.getMonth(),
-              1
-            );
-
-            nextDateMap.set(habit.id, newDate);
-
-
-
-            return nextDateMap;
-          });
-        }}
-        onKeyDown={e => {
-          if (e.key === 'Enter') {
-            e.preventDefault()
-            e.currentTarget.blur()
-          }
-        }}
-      /><span>年</span><input className = "input-month"
-        value={inputMonth.get(habit.id) ?? dateFunction.strDate(dateForYearMonth).month}
-        onClick={e => e.stopPropagation()}
-        onChange={e => setInputMonth(prev => {
-          const next = new Map(prev)
-          next.set(habit.id, e.target.value)
-          return next
-        })}
-        onBlur={e => {setSelectedDate(prevDateMap => {
-          const inputMonthNum = Number(inputMonth.get(habit.id));
-          if (
-            !Number.isInteger(inputMonthNum) ||
-            inputMonthNum < 1 ||
-            inputMonthNum > 12
-          ) {
-            setInputMonth(prev => {
-              const next = new Map(prev);
-              next.delete(habit.id);
-              return next;
-            });
-            return prevDateMap;
-          }
-
-          const nextDateMap = new Map(prevDateMap);
-          const prevDate = prevDateMap.get(habit.id) || now;
-
-          const newDate = new Date(
-            prevDate.getFullYear(),
-            inputMonthNum - 1,
-            1
-          );
-
-          nextDateMap.set(habit.id, newDate);
-          return nextDateMap
-        })}}
-        onKeyDown={e => {
-          if (e.key === 'Enter') {
-            e.preventDefault()
-            e.currentTarget.blur()
-          }
-        }}
-        /><span>月</span><button className = "next-month" 
-          text = '>'
-          onClick={e => {
-            e.stopPropagation()
-            setSelectedDate(prevDateMap => {
-            const nextDateMap = new Map(prevDateMap);
-            const prevDate = prevDateMap.get(habit.id) || now
-            const newDate = new Date(prevDate.getFullYear(),prevDate.getMonth() + 1,1)
-            nextDateMap.set(habit.id, newDate)
-            return nextDateMap
-          })}}
-          > &gt;
-          </button>
-      </div>
-    </div>
-  )
-  
-  const weekdayNames = () => (
-    <div className="weekdayNames">
-      <div className='weekdayName'>日</div>
-      <div className='weekdayName'>一</div>
-      <div className='weekdayName'>二</div>
-      <div className='weekdayName'>三</div>
-      <div className='weekdayName'>四</div>
-      <div className='weekdayName'>五</div>
-      <div className='weekdayName'>六</div>
-    </div>
-  );
-
-  const weekday = (habit,dateForWeek, columnid, compare_date, newCommentBool = false) => {
-    dateForWeek = dateForWeek || now
-    const sunday = new Date(dateForWeek);
-    sunday.setDate(dateForWeek.getDate() - dateForWeek.getDay());
-    const weeklist = []
-    for (let i = 0; i < 7; i++) {
-      const dateInWeek = new Date(sunday);
-      dateInWeek.setDate(sunday.getDate() + i);
-      weeklist.push(dateInWeek);
-    }
-    return (
-      <div className="week" key={columnid}>
-        {weeklist.map(dateInWeek => (
-            <button
-              className = {`weekday-btn${
-                dateInWeek.getFullYear() != compare_date.getFullYear() ||
-                (
-                  dateInWeek.getFullYear() === compare_date.getFullYear() &&
-                  dateInWeek.getMonth() != compare_date.getMonth()
-                )
-                  ? ' non-target-month'
-                  : ''
-              }${
-                habit.checkins.some(e => e.date === dateFunction.strDate(dateInWeek).str)
-                  ? ' checkin-day'
-                  : ''
-              }${
-                habit.comments.some(e => e.date === dateFunction.strDate(dateInWeek).str)
-                  ? ' has-comment'
-                  : ''
-              }`} key={dateFunction.strDate(dateInWeek).str}
-              onClick={e => {
-                e.stopPropagation();
-
-                if(newCommentBool === true) {
-                  const clickedDate = new Date(dateInWeek);
-                  const clickedDateString = dateFunction.strDate(clickedDate).str;
-                  
-                  setSelectedDate(prev => {
-                    const next = new Map(prev);
-                    next.set(habit.id, clickedDate);
-                    return next;
-                  });
-                  setNewCommentDate(prev => {
-                    const next = new Map(prev);
-                    next.set(habit.id, clickedDateString);
-                    return next;
-                  });
-                } else {
-                  const buttonComment = habit.comments.find(
-                    comment => comment.date === dateFunction.strDate(dateInWeek).str
-                  );
-
-                  setModalInfo({
-                    habit,
-                    comment: buttonComment ?? {
-                      id: null,
-                      date: dateFunction.strDate(dateInWeek).str,
-                      text: ''
-                    }
-                  });
-
-                  setInputModal(buttonComment?.text ?? '');
-                  setShowModal(true);
-              }}}
-            >
-            {
-              habit.checkins.some(e => e.date === dateFunction.strDate(dateInWeek).str)
-                ? <span className="weekday-content"><><span className = 'checkinfire'>🔥</span><sup>{dateFunction.strDate(dateInWeek).day}</sup></></span>
-                : <span className="weekday-content">{dateFunction.strDate(dateInWeek).day}</span>
-            }
-            {habit.comments.some(e => e.date === dateFunction.strDate(dateInWeek).str) && (
-              <span className="comment-tooltip">
-                {habit.comments.find(
-                  e => e.date === dateFunction.strDate(dateInWeek).str
-                )?.text}
-              </span>)}
-            
-            </button>))}
-      </div>
-    )
-  }
-
-  const calendar = (habit, newCommentBool = false) => {
-    const habitDate = selectedDate.get(habit.id) || now;
-    const firstDay = new Date(
-      habitDate.getFullYear(),
-      habitDate.getMonth(),
-      1
-    );
-    const weeks = [calendarFirstRow(habit,habitDate),weekdayNames()];
-    let addWeekDate = new Date(firstDay);
-    for (let i = 0; i < 6; i++) {
-      weeks.push(weekday(habit,addWeekDate, i, firstDay, newCommentBool));
-      addWeekDate.setDate(addWeekDate.getDate() + 7);
-    }
-    return weeks;
-  }
-
 
 
   if (loading) return <div className="center">載入中…</div>
@@ -1005,7 +754,7 @@ export default function App() {
                         next.set(`${habit.id}-newDate`, true)
                         return next
                         })
-                        openCalendar(habit)
+                        calendarFunction.openCalendar(habit,openCalendarContext)
                         setShowCalendar(habit.id)
                       }}
                       onBlur={() => {setFocus(prev => {
@@ -1026,7 +775,7 @@ export default function App() {
                         onMouseDown={e => e.preventDefault()}
                       >
                         <div className = "calendar">
-                          {calendar(habit,true)}
+                          {calendarFunction.calendar(habit,true,calendarContext)}
                         </div>
                       </div>
                     )}
@@ -1116,7 +865,7 @@ export default function App() {
         ) : null}
         {showCommentOrCalendar.get(habit.id) === 'calendar' ? (
           <div className="calendar">
-            {calendar(habit)}
+            {calendarFunction.calendar(habit, false, calendarContext)}
           </div>
         ) : null}
       </div>
